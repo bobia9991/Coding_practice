@@ -1,0 +1,104 @@
+# initial settings
+workdir: "/mnt/Data/Practice/RRBS_Snakemake/wrapper"
+configfile: "/mnt/Data/Practice/RRBS_Snakemake/wrapper/config.yaml"
+
+
+# needed libraries
+import pandas as pd
+import os
+from datetime import datetime
+
+
+# get input as a CSV file
+samples_table = pd.read_csv("sample.csv").set_index("sample", drop = False)
+
+
+# read1: input function definition
+def r1_from_sample(wildcards):
+    return samples_table.loc[wildcards.sample, "fastq1"]
+
+# read2: input function definition
+def r2_from_sample(wildcards):
+    return samples_table.loc[wildcards.sample, "fastq2"]
+
+
+# extract Sample name as a list using in the expand function below
+SAMPLES = list(samples_table['sample'])
+
+# rule settings
+rule all:
+    input:
+        expand("trimmed/{sample}/{sample}_1.trimmed.fastq.gz", sample=SAMPLES),
+        expand("trimmed/{sample}/{sample}_1.trimmed.unpaired.fastq.gz", sample=SAMPLES),
+        expand("trimmed/{sample}/{sample}_2.trimmed.fastq.gz", sample=SAMPLES),
+        expand("trimmed/{sample}/{sample}_2.trimmed.unpaired.fastq.gz", sample=SAMPLES)
+
+rule trimmomatic_pe:
+    input:
+        adapter = "/usr/local/bin/Trimmomatic-0.39/adapters/TruSeq3-PE-2.fa",
+        r1 = r1_from_sample,
+        r2 = r2_from_sample
+
+    output:
+        output_r1="trimmed/{sample}/{sample}_1.trimmed.fastq.gz",
+        output_r2="trimmed/{sample}/{sample}_2.trimmed.fastq.gz",
+        output_r1_unpaired="trimmed/{sample}/{sample}_1.trimmed.unpaired.fastq.gz",
+        output_r2_unpaired="trimmed/{sample}/{sample}_2.trimmed.unpaired.fastq.gz"
+
+    log:
+        "trimmed/{sample}/{sample}.log"
+
+    threads:
+        8
+
+    message: "Trimming Illumina adapters from {input.r1} and {input.r2}"
+
+    shell:
+        """
+            echo "The process is started at\t$(date '+%F %T')" | column |& tee -a {log}
+            start=$(date +%s.%N)
+            trimmomatic PE \
+                -threads {threads} \
+                -phred33 \
+                {input.r1} {input.r2} \
+                {output.output_r1} {output.output_r1_unpaired} \
+                {output.output_r2} {output.output_r2_unpaired} \
+                ILLUMINACLIP:{input.adapter}:2:30:10 \
+                HEADCROP:15 \
+                TRAILING:3 \
+                SLIDINGWINDOW:4:15 \
+                MINLEN:36 |& tee -a {log}
+            
+            echo "The process finished at \t$(date '+%F %T')" | column |& tee -a {log}
+            end=$(date +%s.%N)
+
+            length=$(echo "$end - $start" | bc)
+            day_length=$(echo "$length/86400" | bc)
+            convert_to_day=$(echo "$length-86400*$day_length" | bc)
+            hour_length=$(echo "$convert_to_day/3600" | bc)
+            convert_to_hour=$(echo "$convert_to_day-3600*$hour_length" | bc)
+            minutes=$(echo "$convert_to_hour/60" | bc)
+            senconds=$(echo "$convert_to_hour-60*$minutes" | bc)
+            LC_NUMERIC=C printf "Total runtime: %d days, %02d hours, %02d minutes, %02.4f seconds\n" \
+                $day_length $hour_length $minutes $senconds |& tee -a {log}
+        """
+
+onsuccess:
+    print("Workflow finished, no error")
+    for rulename in dir(rules):
+        the_rule = getattr(rules, rulename)
+        if hasattr(the_rule, "log"):
+            log_list = expand(getattr(the_rule, "log"), sample=SAMPLES)
+    for file in log_list:
+        shell(
+            "head {file}"
+        )
+    # shell(
+    #     "echo Done | mutt -s \"Success\" -- thanhbinh9991@gmail.com"
+    # )
+
+onerror:
+    print("An error occurred"),
+    shell(
+        "echo Error | mutt -s \"An error occurred, please check the log\" -- thanhbinh9991@gmail.com"
+    )

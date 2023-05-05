@@ -1,0 +1,3 @@
+sample,fastq1,fastq2
+SRR4453299,/mnt/Data/Practice/RRBS_Snakemake/wrapper/reads/SRR4453299_1.fastq.gz,/mnt/Data/Practice/RRBS_Snakemake/wrapper/reads/SRR4453299_2.fastq.gz
+SRR4453300,/mnt/Data/Practice/RRBS_Snakemake/wrapper/reads/SRR4453300_1.fastq.gz,/mnt/Data/Practice/RRBS_Snakemake/wrapper/reads/SRR4453300_2.fastq.gz
