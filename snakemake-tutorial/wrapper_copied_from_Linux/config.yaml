@@ -1,5 +1,7 @@
-samples:
- SRR4453299_1.fastq.gz
- SRR4453299_2.fastq.gz
- SRR4453300_1.fastq.gz
- SRR4453300_2.fastq.gz
+workdir: "/mnt/Data/Practice/RRBS_Snakemake/wrapper"
+pre_trim_qc: "pre_trim_qc"
+trimming_folder: "trimmed"
+post_trim_qc: "post_trim_qc"
+alignment_folder: "mapped"
+temp: "temp"
+logs_for_mail: "logs_for_mail"
