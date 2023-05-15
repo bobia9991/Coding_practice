@@ -4,6 +4,7 @@
  matplotlib
  graphviz
  trimmomatic =0.39
+ bismark =0.24.0
  bcftools =1.15
  samtools =1.15
  bwa =0.7.17
