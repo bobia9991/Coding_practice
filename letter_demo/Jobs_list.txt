@@ -1,5 +1,0 @@
-Order|Supervior_name|Project_name|1st_reason|2nd_reason|Link|Status
-1|Prof. N1|"Project 1"|First|Second|Ref link|Done
-2|Dr. N2|"Project 2"|First|Second|Ref link|Done
-3|Prof. N3|"Project 3"|First|Second|Ref link|Done
-4|Prof. N4|"Project 4"|First|Second|Ref link|Done
